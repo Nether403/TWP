@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { hashAdminPassphrase } from "@/lib/utils/crypto";
 
 export async function loginAdmin(formData: FormData) {
   const passphrase = formData.get("passphrase")?.toString();
@@ -12,17 +13,16 @@ export async function loginAdmin(formData: FormData) {
   const expectedPassphrase = process.env.ADMIN_PASSPHRASE;
 
   if (!expectedPassphrase || passphrase !== expectedPassphrase) {
-    // Prevent timing attacks by generic delay, though unlikely needed here.
     return { success: false, error: "Invalid passphrase." };
   }
 
-  // Set the admin access cookie. 
-  // Secure: true requires HTTPS but we allow it locally too via Next checks
-  // 60*60*24 = 1 day max age
+  // Hash the passphrase before storing in the cookie — never store raw secret
+  const hashedValue = await hashAdminPassphrase(expectedPassphrase);
+
   const cookieStore = await cookies();
   cookieStore.set({
     name: "twp_admin_access",
-    value: expectedPassphrase,
+    value: hashedValue,
     httpOnly: true,
     path: "/",
     maxAge: 60 * 60 * 24,

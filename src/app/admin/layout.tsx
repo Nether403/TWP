@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { verifyAdminCookie } from "@/lib/utils/crypto";
 
 /**
  * Admin layout with sidebar navigation.
@@ -11,10 +12,9 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Don't apply admin layout/auth to the login page itself
-  // The login page has its own standalone layout
   const cookieStore = await cookies();
-  const hasAdminToken = cookieStore.get("twp_admin_access")?.value === process.env.ADMIN_PASSPHRASE;
+  const cookieValue = cookieStore.get("twp_admin_access")?.value;
+  const hasAdminToken = await verifyAdminCookie(cookieValue, process.env.ADMIN_PASSPHRASE);
 
   // If no admin token, let the individual page handle the redirect
   // (login page doesn't need the sidebar)

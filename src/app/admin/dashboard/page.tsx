@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import { AdminDashboardClient } from "@/components/admin/dashboard-client";
+import { verifyAdminCookie } from "@/lib/utils/crypto";
 
 export const metadata: Metadata = {
   title: "Admin · Dashboard",
@@ -16,7 +17,10 @@ const supabaseAdmin = createClient(
 
 export default async function AdminDashboardPage() {
   const cookieStore = await cookies();
-  const hasAdminToken = cookieStore.get("twp_admin_access")?.value === process.env.ADMIN_PASSPHRASE;
+  const hasAdminToken = await verifyAdminCookie(
+    cookieStore.get("twp_admin_access")?.value,
+    process.env.ADMIN_PASSPHRASE
+  );
 
   if (!hasAdminToken) {
     redirect("/admin/login");

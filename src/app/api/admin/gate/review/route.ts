@@ -3,15 +3,22 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { Resend } from "resend";
+import { verifyAdminCookie } from "@/lib/utils/crypto";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
-const ADMIN_EMAILS = [
-  process.env.ADMIN_EMAIL || "founder@thewprotocol.online",
-  "martinusvand@gmail.com",
-  "vandeursenmart@gmail.com", 
-  "gfxuser5@gmail.com"
-];
+/**
+ * Authorized admin emails loaded from environment.
+ * ADMIN_EMAILS should be a comma-separated list in .env.local
+ * Falls back to founder email if unset.
+ */
+function getAdminEmails(): string[] {
+  const envEmails = process.env.ADMIN_EMAILS;
+  if (envEmails) {
+    return envEmails.split(",").map((e) => e.trim()).filter(Boolean);
+  }
+  return ["founder@thewprotocol.online"];
+}
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,18 +33,20 @@ const supabaseAdmin = createAdminClient(
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin auth
+    // Verify admin auth — either valid cookie hash OR authenticated admin email
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const cookieStore = await cookies();
-    const hasAdminToken = cookieStore.get("twp_admin_access")?.value === process.env.ADMIN_PASSPHRASE;
+    const cookieValue = cookieStore.get("twp_admin_access")?.value;
+    const hasAdminToken = await verifyAdminCookie(cookieValue, process.env.ADMIN_PASSPHRASE);
 
-    if (!hasAdminToken && (!user || !ADMIN_EMAILS.includes(user.email || ""))) {
+    const adminEmails = getAdminEmails();
+    if (!hasAdminToken && (!user || !adminEmails.includes(user.email || ""))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const reviewerId = user ? user.id : null;
-    const reviewerEmail = user ? user.email : "GOD_MODE_PASSPHRASE";
+    const reviewerEmail = user ? user.email : "GOD_MODE_ADMIN";
 
     const { assessmentId, decision } = await request.json();
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdminCookie } from "@/lib/utils/crypto";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +17,10 @@ const supabaseAdmin = createClient(
 export async function PUT(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const hasAdminToken = cookieStore.get("twp_admin_access")?.value === process.env.ADMIN_PASSPHRASE;
+    const hasAdminToken = await verifyAdminCookie(
+      cookieStore.get("twp_admin_access")?.value,
+      process.env.ADMIN_PASSPHRASE
+    );
 
     if (!hasAdminToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -79,7 +83,10 @@ export async function PUT(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
-    const hasAdminToken = cookieStore.get("twp_admin_access")?.value === process.env.ADMIN_PASSPHRASE;
+    const hasAdminToken = await verifyAdminCookie(
+      cookieStore.get("twp_admin_access")?.value,
+      process.env.ADMIN_PASSPHRASE
+    );
 
     if (!hasAdminToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

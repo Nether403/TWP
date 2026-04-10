@@ -3,28 +3,31 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { AdminGateQueue } from "@/components/admin/gate-queue";
+import { verifyAdminCookie } from "@/lib/utils/crypto";
 
 export const metadata: Metadata = {
   title: "Admin · Gate Queue",
   description: "HCC Gateway queue — review and score Gate submissions.",
 };
 
-// Admin emails — in production, move this to DB or env
-const ADMIN_EMAILS = [
-  process.env.ADMIN_EMAIL || "founder@thewprotocol.online",
-  "martinusvand@gmail.com",
-  "vandeursenmart@gmail.com", 
-  "gfxuser5@gmail.com"
-];
+function getAdminEmails(): string[] {
+  const envEmails = process.env.ADMIN_EMAILS;
+  if (envEmails) return envEmails.split(",").map((e) => e.trim()).filter(Boolean);
+  return ["founder@thewprotocol.online"];
+}
 
 export default async function AdminGatePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const cookieStore = await cookies();
-  const hasAdminToken = cookieStore.get("twp_admin_access")?.value === process.env.ADMIN_PASSPHRASE;
+  const hasAdminToken = await verifyAdminCookie(
+    cookieStore.get("twp_admin_access")?.value,
+    process.env.ADMIN_PASSPHRASE
+  );
 
-  if (!hasAdminToken && (!user || !ADMIN_EMAILS.includes(user.email || ""))) {
+  const adminEmails = getAdminEmails();
+  if (!hasAdminToken && (!user || !adminEmails.includes(user.email || ""))) {
     redirect("/admin/login");
   }
 
