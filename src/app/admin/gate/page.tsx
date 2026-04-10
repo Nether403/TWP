@@ -11,6 +11,9 @@ export const metadata: Metadata = {
 // Admin emails — in production, move this to DB or env
 const ADMIN_EMAILS = [
   process.env.ADMIN_EMAIL || "founder@thewprotocol.online",
+  "martinusvand@gmail.com",
+  "vandeursenmart@gmail.com", 
+  "gfxuser5@gmail.com"
 ];
 
 export default async function AdminGatePage() {
