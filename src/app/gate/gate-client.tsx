@@ -106,7 +106,7 @@ export default function TheGateClient({ userEmail }: { userEmail: string }) {
                   onClick={() => setStep(2)}
                   className="group relative flex items-center space-x-4 border border-foreground/30 hover:border-foreground/80 px-8 py-4 transition-all duration-500 bg-transparent"
                 >
-                  <span className="font-serif tracking-[0.15em] uppercase text-sm">I Accept the Burden</span>
+                  <span className="font-serif tracking-[0.15em] uppercase text-sm">I accept</span>
                   <ArrowRight className="w-4 h-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-2 transition-transform duration-500" />
                 </button>
               </div>

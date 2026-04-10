@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
         <div className="space-y-4">
           <Shield className="w-8 h-8 mx-auto text-red-500/50" />
           <h1 className="text-2xl font-serif tracking-widest text-foreground text-glow uppercase">
-            God Mode
+            Admin mode
           </h1>
           <p className="text-xs tracking-[0.2em] text-muted-foreground/40 font-mono uppercase">
             Restricted Authenticator
@@ -84,7 +84,7 @@ export default function AdminLoginPage() {
             className="group/btn relative w-full flex items-center justify-center space-x-3 py-4 overflow-hidden border border-border/30 hover:border-red-500/40 transition-colors duration-500"
           >
             <span className="font-serif tracking-[0.2em] uppercase text-xs opacity-70 group-hover/btn:opacity-100">
-              {isLoading ? "Verifying..." : "Breach Gate"}
+              {isLoading ? "Verifying..." : "unlock the gate"}
             </span>
             <span className="absolute inset-0 bg-red-500/5 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
           </button>

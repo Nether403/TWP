@@ -238,7 +238,7 @@ export default function Home() {
               Current Status
             </h2>
             <p className="inline-block px-4 py-1 border border-border/40 text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-serif">
-              Pre-Alpha
+              Phase 5 Alpha
             </p>
           </div>
 
