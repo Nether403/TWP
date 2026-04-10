@@ -2,7 +2,7 @@
 
 > **Version:** 1.0 | **Date:** 2026-04-10  
 > **Author:** Martin van Deursen, Founder & Chair  
-> **Status:** Pre-alpha | **Stage:** Brick Laying
+> **Status:** Phase 5 Alpha (Live) | **Stage:** Instrument Maturation
 
 ---
 
@@ -171,7 +171,7 @@ A public, append-only transparency feed documenting methodological weaknesses, b
 | **Performance** | Page load < 1s. API response < 500ms (99th percentile). |
 | **Auditability** | All state changes logged in `audit_log` table. Immutable, append-only. |
 | **Provenance** | RFC-3161 timestamps + IPFS CIDs on all published corpus entries. |
-| **Stage Clarity** | Every public surface explicitly states "pre-alpha" status. No marketing language. |
+| **Stage Clarity** | Every public surface explicitly states "Phase 5 Alpha (Live)" status. No marketing language. |
 
 ---
 
