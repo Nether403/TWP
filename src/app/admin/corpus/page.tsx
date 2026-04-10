@@ -23,7 +23,7 @@ export default async function CorpusPage() {
   }
 
   // Fetch accepted testimonies with their assessments
-  const { data: testimonies } = await supabaseAdmin
+  const { data: testimonies, error } = await supabaseAdmin
     .from("testimony_records")
     .select(`
       id,
@@ -31,7 +31,7 @@ export default async function CorpusPage() {
       status,
       annotations,
       created_at,
-      gate_assessments (
+      gate_assessments!testimony_records_gate_assessment_id_fkey (
         tier1_score,
         tier2_cap_tags,
         tier2_rel_tags,
@@ -43,6 +43,10 @@ export default async function CorpusPage() {
       )
     `)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[Corpus] Query error:", error);
+  }
 
   return <CorpusClient testimonies={testimonies ?? []} />;
 }
