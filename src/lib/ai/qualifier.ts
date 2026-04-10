@@ -80,10 +80,17 @@ export async function runQualifier(essayText: string): Promise<QualifierResult> 
     response_format: { type: "json_object" },
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
+  const rawContent = response.choices[0]?.message?.content;
+  if (!rawContent) {
     throw new Error("Empty response from AI Qualifier");
   }
+
+  // Strip markdown code fences if present — Claude sometimes wraps JSON
+  // in ```json ... ``` even when response_format is json_object
+  const content = rawContent
+    .replace(/^```(?:json)?\s*\n?/i, "")
+    .replace(/\n?```\s*$/i, "")
+    .trim();
 
   const result = JSON.parse(content);
   return {

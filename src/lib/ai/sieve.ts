@@ -55,10 +55,15 @@ export async function runSieve(essayText: string): Promise<SieveResult> {
     response_format: { type: "json_object" },
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
+  const rawContent = response.choices[0]?.message?.content;
+  if (!rawContent) {
     throw new Error("Empty response from AI Sieve");
   }
+
+  const content = rawContent
+    .replace(/^```(?:json)?\s*\n?/i, "")
+    .replace(/\n?```\s*$/i, "")
+    .trim();
 
   const result = JSON.parse(content);
   return {
