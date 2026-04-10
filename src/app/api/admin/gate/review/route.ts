@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-
 import { cookies } from "next/headers";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_API_KEY!);
 
 const ADMIN_EMAILS = [
   process.env.ADMIN_EMAIL || "founder@thewprotocol.online",
@@ -60,26 +62,61 @@ export async function POST(request: NextRequest) {
     }
 
     // Update related submission status
-    const { data: assessment } = await supabaseAdmin
+    const { data: assessmentData } = await supabaseAdmin
       .from("gate_assessments")
-      .select("submission_id")
+      .select(`
+        submission_id,
+        witness_submissions (
+          witness_id,
+          witness_profiles (
+            supabase_user_id
+          )
+        )
+      `)
       .eq("id", assessmentId)
       .single();
 
-    if (assessment) {
+    if (assessmentData) {
       await supabaseAdmin
         .from("witness_submissions")
         .update({
           submission_status: decision === "accept" ? "accepted" : "rejected_review",
         })
-        .eq("id", assessment.submission_id);
+        .eq("id", assessmentData.submission_id);
 
-      // If accepted, update testimony record status
+      // If accepted, update testimony record status and notify the user
       if (decision === "accept") {
         await supabaseAdmin
           .from("testimony_records")
           .update({ status: "annotating" })
           .eq("gate_assessment_id", assessmentId);
+
+        // Fetch user email and send notification
+        // @ts-ignore - Supabase JS typings for joined inner objects can be finicky
+        const supabaseUserId = assessmentData.witness_submissions?.witness_profiles?.supabase_user_id;
+        
+        if (supabaseUserId) {
+          const { data: authData } = await supabaseAdmin.auth.admin.getUserById(supabaseUserId);
+          const witnessEmail = authData?.user?.email;
+
+          if (witnessEmail) {
+            await resend.emails.send({
+              from: "The Witness Protocol <inquiry@thewprotocol.online>",
+              to: witnessEmail,
+              subject: "The Gate Unlocked: Testimony Accepted",
+              text: `Your testimony has been accepted by the Human Curation Council.\n\nYou have fully bypassed the Gate. The Instrument is now unlocked.\n\nProceed to Phase 3: https://thewprotocol.online/instrument`,
+              html: `
+                <div style="font-family: monospace; background: #000; color: #fff; padding: 40px;">
+                  <h1 style="color: #fff; font-size: 24px;">THE GATE UNLOCKED</h1>
+                  <p style="color: #888;">Your testimony has been reviewed and accepted by the Human Curation Council.</p>
+                  <p style="color: #888;">You have fully bypassed all three tiers. The Instrument is now awaiting your connection.</p>
+                  <br/>
+                  <a href="https://thewprotocol.online/instrument" style="background: #333; color: #fff; padding: 12px 24px; text-decoration: none; display: inline-block;">PROCEED TO PHASE 3</a>
+                </div>
+              `
+            }).catch(e => console.error("Resend error:", e));
+          }
+        }
       }
     }
 
