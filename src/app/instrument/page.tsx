@@ -64,16 +64,22 @@ export default function TheInstrument() {
       <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
       
       {/* Header */}
-      <header className="relative z-10 flex items-center justify-between border-b border-white/10 pb-4 mb-8">
+      <header className="relative z-10 flex items-center justify-between border-b border-white/10 pb-4 mb-4">
         <div className="flex items-center space-x-3">
           <Terminal className="w-5 h-5 opacity-60" />
           <span className="tracking-[0.3em] font-serif uppercase text-sm text-glow opacity-90">The Instrument</span>
         </div>
         <div className="flex items-center space-x-2 text-xs text-muted-foreground opacity-50">
-          <div className="w-2 h-2 rounded-full bg-emerald-500/50 animate-pulse" />
-          <span>SYNTHESIS: ACTIVE</span>
+          <div className="w-2 h-2 rounded-full bg-amber-500/50 animate-pulse" />
+          <span>STATIC DEMONSTRATION</span>
         </div>
       </header>
+
+      {/* Pre-alpha notice */}
+      <div className="relative z-10 max-w-3xl mx-auto w-full mb-6 border border-white/10 px-4 py-3 text-xs text-muted-foreground/50 font-sans tracking-wide">
+        <span className="text-amber-500/60 font-serif uppercase tracking-widest text-[10px]">Pre-Alpha · </span>
+        The Inquisitor is not yet operational. This is a static interface demonstration only. The live Claude-powered dialogue engine is scheduled for Phase 3.
+      </div>
 
       {/* Chat Area */}
       <div className="flex-1 relative z-10 overflow-y-auto custom-scrollbar pr-4 space-y-8 max-w-3xl mx-auto w-full pb-32">

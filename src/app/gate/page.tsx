@@ -10,15 +10,16 @@ export default function TheGate() {
   const [essay, setEssay] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const wordCount = essay.trim() ? essay.trim().split(/\s+/).length : 0;
 
   const handleSubmit = async () => {
     if (wordCount < 250) {
-      alert("Minimum 250 words required.");
+      setSubmitError("Minimum 250 words required by the primary sieve.");
       return;
     }
-    
+    setSubmitError(null);
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from("witness_submissions").insert([
@@ -27,7 +28,7 @@ export default function TheGate() {
       
       if (error) {
         console.error("Error submitting essay:", error);
-        alert("An error occurred preserving your testimony.");
+        setSubmitError("An error occurred preserving your testimony. Please try again.");
       } else {
         setSubmitted(true);
         setStep(3);
@@ -127,9 +128,14 @@ export default function TheGate() {
               </div>
 
               <div className="flex justify-between items-center pt-4">
-                <span className="font-mono text-xs text-muted-foreground">
-                  Words: {wordCount} / 250
-                </span>
+                <div className="space-y-1">
+                  <span className="font-mono text-xs text-muted-foreground">
+                    Words: {wordCount} / 250
+                  </span>
+                  {submitError && (
+                    <p className="text-xs text-foreground/60 font-sans">{submitError}</p>
+                  )}
+                </div>
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting || wordCount < 250}
