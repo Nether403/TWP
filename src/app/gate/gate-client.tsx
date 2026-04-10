@@ -278,13 +278,22 @@ export default function TheGateClient({ userEmail }: { userEmail: string }) {
                 )}
                 {result.status === "rejected_qualifier" && (
                   <p className="text-muted-foreground font-sans text-sm">
-                    Your submission passed the initial sieve but did not generate sufficient alignment-relevant signal 
-                    for the qualitative analyzer. Consider providing more concrete scenarios and specificity. 
+                    Your submission passed the initial sieve but the qualitative analyzer needs more to work with.
+                    Try grounding your response in a specific moment or scenario — the concrete details of what happened,
+                    what you felt, and what was at stake. Abstract reflections are harder to extract signal from.
                     You may submit again.
                   </p>
                 )}
 
                 <div className="flex gap-4 justify-center pt-4">
+                  {(result.status === "rejected_sieve" || result.status === "rejected_qualifier") && (
+                    <button
+                      onClick={() => { setStep(2); setResult(null); setEssay(""); }}
+                      className="text-sm font-serif tracking-widest uppercase text-foreground/70 hover:text-foreground border border-border/40 hover:border-foreground/50 px-4 py-2 transition-all"
+                    >
+                      Submit Again
+                    </button>
+                  )}
                   <a
                     href="/dashboard"
                     className="text-sm font-serif tracking-widest uppercase text-foreground/70 hover:text-foreground border-b border-transparent hover:border-foreground/50 pb-1 transition-all"
