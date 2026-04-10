@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #050505;
+  --color-foreground: #e0e0e0;
+  
+  --color-muted: #1a1a1a;
+  --color-muted-foreground: #808080;
+  
+  --color-accent: #333333;
+  --color-accent-foreground: #ffffff;
+  
+  --color-border: #1f1f1f;
+  
+  --font-sans: var(--font-eb-garamond);
+  --font-serif: var(--font-cinzel);
+}
+
+@layer base {
+  :root {
+    --background: #050505;
+    --foreground: #e0e0e0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), serif;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(20, 20, 25, 0.5) 0%, transparent 60%),
+      radial-gradient(circle at 50% 100%, rgba(10, 10, 15, 0.8) 0%, transparent 80%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif), serif;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+
+  /* Custom Scrollbar for stark minimalism */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1f1f1f;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #333333;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.1), 0 0 30px rgba(255, 255, 255, 0.05);
+  }
+  .border-glow {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.05) inset, 0 0 15px rgba(255, 255, 255, 0.05);
+  }
+}
