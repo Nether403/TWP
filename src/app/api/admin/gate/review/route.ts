@@ -4,6 +4,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { Resend } from "resend";
 import { verifyAdminCookie } from "@/lib/utils/crypto";
+import { SUBMISSION_STATUS, ASSESSMENT_STATUS, TESTIMONY_STATUS } from "@/lib/lifecycle";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin
         .from("witness_submissions")
         .update({
-          submission_status: decision === "accept" ? "accepted" : "rejected_review",
+          submission_status: decision === "accept" ? SUBMISSION_STATUS.ACCEPTED : SUBMISSION_STATUS.REJECTED_REVIEW,
         })
         .eq("id", assessmentData.submission_id);
 
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       if (decision === "accept") {
         await supabaseAdmin
           .from("testimony_records")
-          .update({ status: "annotating" })
+          .update({ status: TESTIMONY_STATUS.ANNOTATING })
           .eq("gate_assessment_id", assessmentId);
 
         // Fetch user email and send notification

@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import { AdminDashboardClient } from "@/components/admin/dashboard-client";
 import { verifyAdminCookie } from "@/lib/utils/crypto";
+import { SUBMISSION_STATUS, ASSESSMENT_STATUS } from "@/lib/lifecycle";
 
 export const metadata: Metadata = {
   title: "Admin · Dashboard",
@@ -37,9 +38,9 @@ export default async function AdminDashboardPage() {
     { data: recentAudit },
   ] = await Promise.all([
     supabaseAdmin.from("witness_submissions").select("*", { count: "exact", head: true }),
-    supabaseAdmin.from("witness_submissions").select("*", { count: "exact", head: true }).eq("submission_status", "accepted"),
-    supabaseAdmin.from("witness_submissions").select("*", { count: "exact", head: true }).in("submission_status", ["rejected_sieve", "rejected_qualifier", "rejected_review"]),
-    supabaseAdmin.from("gate_assessments").select("*", { count: "exact", head: true }).eq("final_status", "review"),
+    supabaseAdmin.from("witness_submissions").select("*", { count: "exact", head: true }).eq("submission_status", SUBMISSION_STATUS.ACCEPTED),
+    supabaseAdmin.from("witness_submissions").select("*", { count: "exact", head: true }).in("submission_status", [SUBMISSION_STATUS.REJECTED_SIEVE, SUBMISSION_STATUS.REJECTED_QUALIFIER, SUBMISSION_STATUS.REJECTED_REVIEW]),
+    supabaseAdmin.from("gate_assessments").select("*", { count: "exact", head: true }).eq("final_status", ASSESSMENT_STATUS.REVIEW),
     supabaseAdmin.from("inquisitor_sessions").select("*", { count: "exact", head: true }),
     supabaseAdmin.from("gate_assessments").select("tier2_cap_tags, tier2_rel_tags, tier2_felt_tags, tier2_specificity, tier2_counterfactual, tier2_relational, tier1_score, final_status, created_at"),
     supabaseAdmin.from("audit_log").select("action, created_at, metadata").order("created_at", { ascending: false }).limit(20),

@@ -6,6 +6,11 @@ import { runSieve } from "@/lib/ai/sieve";
 import { runQualifier } from "@/lib/ai/qualifier";
 import { detectAndStripPII } from "@/lib/ai/pii";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import {
+  SUBMISSION_STATUS,
+  ASSESSMENT_STATUS,
+  TESTIMONY_STATUS,
+} from "@/lib/lifecycle";
 
 // Service role client for database operations
 const supabaseAdmin = createClient(
@@ -21,11 +26,13 @@ const supabaseAdmin = createClient(
  * 2. Validate essay (Zod schema)
  * 3. Hash content for tamper detection
  * 4. Insert submission into witness_submissions
- * 5. Run Tier 1: AI Sieve (async, non-blocking)
+ * 5. Run Tier 1: AI Sieve
  * 6. If Sieve passes → Run Tier 2: AI Qualifier
  * 7. Create gate_assessment record
  * 8. If both tiers pass → Run PII stripping → Create testimony_record
  * 9. Audit log everything
+ * 
+ * State machine transitions are governed by src/lib/lifecycle.ts
  */
 export async function POST(request: NextRequest) {
   try {
@@ -84,7 +91,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Insert submission
+    // 4. Insert submission — initial state: processing_sieve
     const { data: submission, error: insertError } = await supabaseAdmin
       .from("witness_submissions")
       .insert({
@@ -92,7 +99,7 @@ export async function POST(request: NextRequest) {
         word_count: wordCount,
         content_hash: contentHash,
         witness_id: profile.id,
-        submission_status: "processing_sieve",
+        submission_status: SUBMISSION_STATUS.PROCESSING_SIEVE,
       })
       .select("id")
       .single();
@@ -105,14 +112,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Run Tier 1: AI Sieve
+    // ═══════════════════════════════════════════
+    // TIER 1: AI Sieve
+    // ═══════════════════════════════════════════
     let sieveResult;
     try {
       sieveResult = await runSieve(essay_text);
     } catch (err) {
       console.error("Sieve error:", err);
-      // Don't fail the submission — mark as needing manual review
-      sieveResult = { passed: false, score: 0, reason: "Sieve processing failed — flagged for manual review", flags: ["sieve_error"], model: "error" };
+      sieveResult = {
+        passed: false,
+        score: 0,
+        reason: "Sieve processing failed — flagged for manual review",
+        flags: ["sieve_error"],
+        model: "error",
+      };
     }
 
     // Create gate assessment record
@@ -126,7 +140,9 @@ export async function POST(request: NextRequest) {
         tier1_reason: sieveResult.reason,
         tier1_model: sieveResult.model,
         tier1_processed_at: new Date().toISOString(),
-        final_status: sieveResult.passed ? "pending" : "failed",
+        final_status: sieveResult.passed
+          ? ASSESSMENT_STATUS.PENDING
+          : ASSESSMENT_STATUS.FAILED,
       })
       .select("id")
       .single();
@@ -135,16 +151,45 @@ export async function POST(request: NextRequest) {
       console.error("Assessment insert error:", assessmentError);
     }
 
-    // 6. If Sieve passes → Run Tier 2: AI Qualifier
+    // ── Tier 1 FAILED → terminal state ──
+    if (!sieveResult.passed) {
+      await supabaseAdmin
+        .from("witness_submissions")
+        .update({ submission_status: SUBMISSION_STATUS.REJECTED_SIEVE })
+        .eq("id", submission.id);
+
+      await logAudit(submission.id, profile, contentHash, wordCount, sieveResult, null);
+
+      return NextResponse.json({
+        success: true,
+        submissionId: submission.id,
+        status: SUBMISSION_STATUS.REJECTED_SIEVE,
+        pseudonym: profile.pseudonym,
+        tier1: { passed: false, score: sieveResult.score },
+        tier2: null,
+      });
+    }
+
+    // ═══════════════════════════════════════════
+    // TIER 2: AI Qualifier (only if Tier 1 passed)
+    // ═══════════════════════════════════════════
+
+    // Transition: processing_sieve → processing_qualifier
+    await supabaseAdmin
+      .from("witness_submissions")
+      .update({ submission_status: SUBMISSION_STATUS.PROCESSING_QUALIFIER })
+      .eq("id", submission.id);
+
     let qualifierResult;
     let qualifierError: string | null = null;
-    if (sieveResult.passed && assessment) {
-      try {
-        console.log("[Gate] Running Tier 2 Qualifier for submission:", submission.id);
-        qualifierResult = await runQualifier(essay_text);
-        console.log("[Gate] Qualifier result:", JSON.stringify(qualifierResult, null, 2));
 
-        const { error: updateError } = await supabaseAdmin
+    try {
+      console.log("[Gate] Running Tier 2 Qualifier for submission:", submission.id);
+      qualifierResult = await runQualifier(essay_text);
+      console.log("[Gate] Qualifier result:", JSON.stringify(qualifierResult, null, 2));
+
+      if (assessment) {
+        await supabaseAdmin
           .from("gate_assessments")
           .update({
             tier2_status: qualifierResult.passed ? "passed" : "failed",
@@ -156,121 +201,113 @@ export async function POST(request: NextRequest) {
             tier2_relational: qualifierResult.relational,
             tier2_model: qualifierResult.model,
             tier2_processed_at: new Date().toISOString(),
-            final_status: qualifierResult.passed ? "review" : "failed",
+            final_status: qualifierResult.passed
+              ? ASSESSMENT_STATUS.REVIEW
+              : ASSESSMENT_STATUS.FAILED,
           })
           .eq("id", assessment.id);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      console.error("[Gate] Qualifier execution CRASHED:", errorMsg, err);
+      qualifierError = errorMsg;
 
-        if (updateError) {
-          console.error("[Gate] Qualifier DB update error:", updateError);
-          qualifierError = `DB update failed: ${updateError.message}`;
-        }
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        console.error("[Gate] Qualifier execution CRASHED:", errorMsg, err);
-        qualifierError = errorMsg;
-        
-        // Don't treat a crash as a rejection — forward to HCC review
-        qualifierResult = {
-          passed: true, // Give benefit of doubt on API failure
-          cap_tags: [],
-          rel_tags: [],
-          felt_tags: [],
-          specificity: 0,
-          counterfactual: 0,
-          relational: 0,
-          summary: `Qualifier API error — forwarded to HCC review. Error: ${errorMsg}`,
-          model: "error",
-        };
+      // API crash → benefit of doubt → forward to HCC
+      qualifierResult = {
+        passed: true,
+        cap_tags: [],
+        rel_tags: [],
+        felt_tags: [],
+        specificity: 0,
+        counterfactual: 0,
+        relational: 0,
+        summary: `Qualifier API error — forwarded to HCC review. Error: ${errorMsg}`,
+        model: "error",
+      };
 
-        // Still update the assessment to reflect the error state
+      if (assessment) {
         await supabaseAdmin
           .from("gate_assessments")
           .update({
             tier2_status: "passed",
             tier2_processed_at: new Date().toISOString(),
-            final_status: "review",
+            final_status: ASSESSMENT_STATUS.REVIEW,
           })
           .eq("id", assessment.id);
       }
     }
 
-    // 7. If both tiers pass → PII strip + create testimony record
-    if (sieveResult.passed && qualifierResult?.passed && assessment) {
-      try {
-        const piiResult = await detectAndStripPII(essay_text);
-
-        await supabaseAdmin
-          .from("testimony_records")
-          .insert({
-            content_hash: contentHash,
-            witness_id: profile.id,
-            de_identified_text: piiResult.deIdentifiedText,
-            original_submission_id: submission.id,
-            gate_assessment_id: assessment.id,
-            status: "gated",
-          });
-
-        // Update submission status
-        await supabaseAdmin
-          .from("witness_submissions")
-          .update({ submission_status: "awaiting_review" })
-          .eq("id", submission.id);
-      } catch (err) {
-        console.error("PII/Testimony error:", err);
-      }
-    } else {
-      // Update submission status to reflect Gate outcome
+    // ── Tier 2 FAILED → terminal state ──
+    if (!qualifierResult.passed) {
       await supabaseAdmin
         .from("witness_submissions")
-        .update({
-          submission_status: sieveResult.passed ? "processing_qualifier" : "rejected_sieve",
-        })
+        .update({ submission_status: SUBMISSION_STATUS.REJECTED_QUALIFIER })
         .eq("id", submission.id);
+
+      await logAudit(submission.id, profile, contentHash, wordCount, sieveResult, qualifierResult);
+
+      return NextResponse.json({
+        success: true,
+        submissionId: submission.id,
+        status: SUBMISSION_STATUS.REJECTED_QUALIFIER,
+        pseudonym: profile.pseudonym,
+        tier1: { passed: true, score: sieveResult.score },
+        tier2: {
+          passed: false,
+          tags: {
+            cap: qualifierResult.cap_tags.length,
+            rel: qualifierResult.rel_tags.length,
+            felt: qualifierResult.felt_tags.length,
+          },
+        },
+      });
     }
 
-    // 8. Audit log
-    await supabaseAdmin.from("audit_log").insert({
-      action: "gate.submit",
-      actor_id: profile.id,
-      target_type: "witness_submission",
-      target_id: submission.id,
-      metadata: {
-        content_hash: contentHash,
-        word_count: wordCount,
-        tier1_passed: sieveResult.passed,
-        tier1_score: sieveResult.score,
-        tier2_passed: qualifierResult?.passed ?? null,
-        pseudonym: profile.pseudonym,
-      },
-    });
+    // ═══════════════════════════════════════════
+    // BOTH TIERS PASSED → PII strip + testimony record + HCC queue
+    // ═══════════════════════════════════════════
+    try {
+      const piiResult = await detectAndStripPII(essay_text);
 
-    // Response
-    const gateStatus = (() => {
-      if (!sieveResult.passed) return "rejected_sieve";
-      if (!qualifierResult) return "error_qualifier";
-      if (!qualifierResult.passed) return "rejected_qualifier";
-      return "awaiting_review";
-    })();
+      await supabaseAdmin
+        .from("testimony_records")
+        .insert({
+          content_hash: contentHash,
+          witness_id: profile.id,
+          de_identified_text: piiResult.deIdentifiedText,
+          original_submission_id: submission.id,
+          gate_assessment_id: assessment?.id,
+          status: TESTIMONY_STATUS.GATED,
+        });
+    } catch (err) {
+      console.error("PII/Testimony error:", err);
+    }
 
-    console.log("[Gate] Final status:", gateStatus, "qualifier passed:", qualifierResult?.passed);
+    // Transition: processing_qualifier → awaiting_review
+    await supabaseAdmin
+      .from("witness_submissions")
+      .update({ submission_status: SUBMISSION_STATUS.AWAITING_REVIEW })
+      .eq("id", submission.id);
+
+    // Audit
+    await logAudit(submission.id, profile, contentHash, wordCount, sieveResult, qualifierResult);
+
+    console.log("[Gate] Final status: awaiting_review — qualifier passed:", qualifierResult.passed);
 
     return NextResponse.json({
       success: true,
       submissionId: submission.id,
-      status: gateStatus,
+      status: SUBMISSION_STATUS.AWAITING_REVIEW,
       pseudonym: profile.pseudonym,
-      tier1: {
-        passed: sieveResult.passed,
-        score: sieveResult.score,
-      },
-      tier2: qualifierResult ? {
-        passed: qualifierResult.passed,
+      tier1: { passed: true, score: sieveResult.score },
+      tier2: {
+        passed: true,
         tags: {
           cap: qualifierResult.cap_tags.length,
           rel: qualifierResult.rel_tags.length,
           felt: qualifierResult.felt_tags.length,
         },
-      } : null,
+      },
       ...(qualifierError ? { qualifierError } : {}),
     });
   } catch (err) {
@@ -280,4 +317,29 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// ─── Audit helper ─────────────────────────────
+async function logAudit(
+  submissionId: string,
+  profile: { id: string; pseudonym: string },
+  contentHash: string,
+  wordCount: number,
+  sieveResult: { passed: boolean; score: number },
+  qualifierResult: { passed: boolean } | null
+) {
+  await supabaseAdmin.from("audit_log").insert({
+    action: "gate.submit",
+    actor_id: profile.id,
+    target_type: "witness_submission",
+    target_id: submissionId,
+    metadata: {
+      content_hash: contentHash,
+      word_count: wordCount,
+      tier1_passed: sieveResult.passed,
+      tier1_score: sieveResult.score,
+      tier2_passed: qualifierResult?.passed ?? null,
+      pseudonym: profile.pseudonym,
+    },
+  });
 }

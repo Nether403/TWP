@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { SUBMISSION_STATUS_LABELS } from "@/lib/lifecycle";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -41,15 +42,7 @@ export default async function DashboardPage() {
     .eq("witness_id", profile?.id)
     .order("created_at", { ascending: false });
 
-  const statusLabels: Record<string, { label: string; color: string }> = {
-    pending_sieve: { label: "Queued", color: "text-muted-foreground/60" },
-    processing_sieve: { label: "Processing · Sieve", color: "text-amber-500/70" },
-    processing_qualifier: { label: "Processing · Analysis", color: "text-amber-500/70" },
-    rejected_sieve: { label: "Rejected · Sieve", color: "text-red-500/70" },
-    rejected_qualifier: { label: "Rejected · Analysis", color: "text-red-500/70" },
-    awaiting_review: { label: "Awaiting HCC Review", color: "text-emerald-500/70" },
-    accepted: { label: "Accepted", color: "text-emerald-400/80" },
-  };
+  const statusLabels = SUBMISSION_STATUS_LABELS;
 
   // Fetch Inquisitor sessions
   const { data: inquisitorSessions } = await supabaseAdmin
