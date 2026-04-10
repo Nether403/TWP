@@ -6,7 +6,7 @@ import { useState } from "react";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
 import { Clock1158 } from "@/components/protocol/clock-1158";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 const fadeIn = (delay: number) => ({
   initial: { opacity: 0, y: 12 },
@@ -34,6 +34,7 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +42,7 @@ export default function Home() {
     setIsSubmitting(true);
 
     try {
+      // 1. Register email in summons table
       const { error } = await supabase
         .from("summons")
         .insert([{ email }]);
@@ -48,6 +50,15 @@ export default function Home() {
       if (error && error.code !== "23505") {
         console.error("Error submitting summons:", error);
       }
+
+      // 2. Also send a magic link so the summons email IS the authentication
+      await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
     } catch (err) {
       console.error("Unexpected error:", err);
     } finally {
@@ -116,16 +127,23 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="border border-border/40 p-8 text-center"
+              className="border border-border/40 p-8 text-center space-y-5"
             >
-              <h3 className="font-serif text-xl mb-4 tracking-widest text-glow">
+              <h3 className="font-serif text-xl mb-2 tracking-widest text-glow">
                 Summons Registered
               </h3>
-              <p className="text-muted-foreground font-sans">
-                If you meet the preliminary criteria, a one-time assessment link
-                will be dispatched to your inbox. Prepare yourself for
-                introspection.
+              <p className="text-muted-foreground font-sans leading-relaxed">
+                A secure authentication link has been sent to{" "}
+                <strong className="text-foreground/80">{email}</strong>.
               </p>
+              <p className="text-sm text-muted-foreground/50 font-sans leading-relaxed">
+                Click the link in the email to verify your identity and proceed
+                directly to The Gate. No password required.
+              </p>
+              <div className="pt-4 flex items-center justify-center gap-2 text-[10px] tracking-[0.2em] uppercase text-muted-foreground/30 font-serif">
+                <Lock className="w-3 h-3" />
+                <span>Passwordless · One-time link · Expires in 24 hours</span>
+              </div>
             </motion.div>
           )}
         </motion.div>
