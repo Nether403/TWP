@@ -1,4 +1,5 @@
 # The Witness Protocol Foundation Platform
+
 <img width="1089" height="792" alt="image" src="https://github.com/user-attachments/assets/d7ef4cf3-87b8-4ba9-a187-e9908619cb19" />
 
 The core infrastructure for gathering, analyzing, and safeguarding human moral and relational testimony in the face of transformative AI. 
@@ -9,7 +10,9 @@ The core infrastructure for gathering, analyzing, and safeguarding human moral a
 
 The platform is currently **live** and actively used for testimony input and annotation.
 
+
 <img width="770" height="769" alt="image" src="https://github.com/user-attachments/assets/93fbf95a-3e08-4eee-82ad-76fac3cb79c3" />
+
 
 ### Completed Infrastructure (Phases 1-4, 6)
 - **Global Production Deployment** (Vercel)
