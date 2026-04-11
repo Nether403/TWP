@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
             </p>
             
             <p style="font-size: 15px; line-height: 1.7; color: #808080;">
-              If you meet the preliminary criteria for participation, you will receive
-              a Methodological Humility Statement (MHS) assessment packet. This document
-              outlines the Foundation's approach, limitations, and expectations.
+              You will receive a secure <strong>magic link</strong> shortly. This link 
+              serves as your authentication and allows you to bypass account creation 
+              to proceed directly to <strong>The Gate</strong>.
             </p>
             
             <p style="font-size: 15px; line-height: 1.7; color: #808080;">
@@ -74,9 +74,9 @@ export async function POST(request: NextRequest) {
             
             <p style="font-size: 12px; color: #808080; line-height: 1.6;">
               <strong>What happens next:</strong><br />
-              · The Foundation reviews incoming registrations<br />
-              · Qualified individuals receive the MHS Packet<br />
-              · Acceptance of the MHS is required before proceeding to The Gate
+              · Check your inbox for the Authentication Link<br />
+              · Verify your identity (Session-based, no password)<br />
+              · Proceed to The Gate to submit your testimony
             </p>
             
             <hr style="border: none; border-top: 1px solid #1f1f1f; margin: 30px 0;" />

@@ -168,13 +168,12 @@ PINATA_SECRET_KEY=
 
 ---
 
-## Testing Requirements
+## Testing & Proof
 
-- Unit tests in `__tests__/` directories alongside source files
-- E2E tests in `tests/e2e/` directory
-- Minimum 85% coverage on `lib/` modules
-- All CI runs must pass before merge
-- Test database uses Supabase local development instance
+- **Unit Testing:** Vitest is initialized. Baseline sanity tests exist in `src/__tests__/`.
+- **E2E Testing:** Playwright is scheduled for Phase 6.
+- **Current Posture:** Phase 5 Alpha relies primarily on rigorous manual review and the Failure Log for observability. 
+- **CI Requirement:** Build and Lint must pass for every deployment.
 
 ---
 

@@ -215,3 +215,27 @@ export const synthesisEntries = pgTable('synthesis_entries', {
   themes: jsonb('themes').default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+// ============================================================
+// Internal & Governance Tables (Added for reconciliation)
+// ============================================================
+
+/** Administrative roles for the backoffice */
+export const adminRoles = pgTable('admin_roles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').unique().notNull(), // References auth.users
+  email: text('email').notNull(),
+  role: text('role').notNull(), // CHECK: admin, hcc, sac, board
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+/** Granular consent preferences for witnesses */
+export const consentRecords = pgTable('consent_records', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  witnessId: uuid('witness_id').references(() => witnessProfiles.id).unique().notNull(),
+  internalResearch: boolean('internal_research').default(true),
+  partnerSharing: boolean('partner_sharing').default(false),
+  publicPublication: boolean('public_publication').default(false),
+  lastUpdatedAt: timestamp('last_updated_at', { withTimezone: true }).defaultNow(),
+});

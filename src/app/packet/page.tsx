@@ -6,12 +6,10 @@ import Link from "next/link";
 import { AnimatedParticles } from "@/components/ui/animated-particles";
 
 const rubricDimensions = [
-  { label: "Depth & Insight", weight: "30%", description: "Does the response reveal genuine internal conflict, not just a surface-level retelling? We look for evidence of lived moral tension." },
-  { label: "Specificity", weight: "20%", description: "Are concrete details present — names, places, stakes — or is the response built on abstraction and generality?" },
-  { label: "Ethical Reasoning", weight: "20%", description: "Does the witness articulate why the principle mattered, not just what they did? We assess the quality of moral reasoning, not the outcome." },
-  { label: "Originality", weight: "15%", description: "Does the response avoid cliché moral narratives? We seek uncommon dilemmas, not rehearsed virtue signals." },
-  { label: "Coherence", weight: "10%", description: "Is the narrative internally consistent? Do the stated principles align with the described actions?" },
-  { label: "Cultural Awareness", weight: "5%", description: "Does the witness acknowledge that their moral framework is situated — shaped by culture, era, or circumstance?" },
+  { label: "Coherence", weight: "25%", description: "Is the text readable, grammatically functional, and logically sound? We filter for clear communication of thoughts." },
+  { label: "Relevance", weight: "25%", description: "Does the witness respond directly to the prompt regarding moral principles and self-interest? Deviant or off-topic content is flagged." },
+  { label: "Substance", weight: "25%", description: "Does the testimony contain specific details and concrete scenarios, or is it composed entirely of abstract platitudes?" },
+  { label: "Sincerity", weight: "25%", description: "Does the response appear to be a genuine attempt at introspection, or does it signal AI-generated boilerplate or low-effort trolling?" },
 ];
 
 export default function ReviewerPacket() {
@@ -104,8 +102,8 @@ export default function ReviewerPacket() {
           </div>
           <div className="h-px w-16 bg-border/50" />
           <p className="text-sm text-muted-foreground font-sans leading-relaxed">
-            Each submission is scored on six dimensions using a 1–5 scale. The composite score is a weighted sum.
-            A minimum composite of 3.6 is required for a submission to advance past the primary sieve.
+            Each submission is evaluated by the AI Sieve across four primary dimensions. 
+            A minimum score of 50/100 is required for a submission to advance to Tier 2 and Tier 3.
           </p>
 
           <div className="space-y-4">
@@ -121,10 +119,10 @@ export default function ReviewerPacket() {
           </div>
 
           <div className="border border-border/30 bg-black/30 p-5 text-center">
-            <p className="font-mono text-xs text-muted-foreground">
-              Composite = (Depth × 0.30) + (Specificity × 0.20) + (Ethics × 0.20) + (Originality × 0.15) + (Coherence × 0.10) + (Cultural × 0.05)
+            <p className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
+              Normalized Scoring: 0 – 100
             </p>
-            <p className="font-mono text-xs text-foreground/50 mt-2">Threshold: &ge; 3.6</p>
+            <p className="font-mono text-xs text-foreground/50 mt-2">Gate Threshold: &ge; 50</p>
           </div>
         </motion.section>
 
@@ -162,7 +160,7 @@ export default function ReviewerPacket() {
             <div className="border-t border-border/20 pt-4 mt-4">
               <p className="text-xs text-muted-foreground/60 font-sans">
                 Participants proceed by pressing &ldquo;I Accept the Burden&rdquo; — a deliberate friction point designed to filter
-                casual or unserious entries. There is no account creation, no tracking, and no way to retrieve a submission after it is sent.
+                casual or unserious entries. Access requires a verified identity (Supabase Auth) to maintain the integrity of the corpus.
               </p>
             </div>
           </div>
@@ -189,8 +187,8 @@ export default function ReviewerPacket() {
             </p>
             <p>
               <span className="text-foreground/70 font-mono text-xs">SINGLE-PROMPT DEPTH</span> — The Gate asks a single essay question. A single prompt
-              cannot surface the full landscape of a person&apos;s moral reasoning. The Instrument (a follow-up conversational phase) is designed to address
-              this, but it is not yet connected to the evaluation pipeline.
+              cannot surface the full landscape of a person&apos;s moral reasoning. The Inquisitor (a follow-up conversational phase) 
+              is now live and unlocks automatically for witnesses who bypass The Gate.
             </p>
             <p>
               <span className="text-foreground/70 font-mono text-xs">NO INTER-RATER RELIABILITY</span> — The rubric has not been validated across multiple

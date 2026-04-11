@@ -33,9 +33,9 @@ const governanceBodies = [
     name: "Human Curation Council (HCC)",
     role: "Operational testimony processing and annotation",
     responsibilities: [
-      "Conduct Gate Tier 3 human reviews (blind dual-rater)",
+      "Conduct Gate Tier 3 alpha reviews (single reviewer)",
       "Apply CAP/REL/FELT annotation framework",
-      "Maintain inter-rater agreement above κ ≥ 0.8",
+      "Develop inter-rater agreement methodology (Vision: κ ≥ 0.8)",
       "Flag systemic biases in corpus composition",
       "Report annotation challenges to the SAC",
     ],
