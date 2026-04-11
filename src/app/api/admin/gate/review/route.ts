@@ -1,25 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
 import { Resend } from "resend";
-import { verifyAdminCookie } from "@/lib/utils/crypto";
+import { requireAdmin } from "@/lib/auth/admin";
 import { SUBMISSION_STATUS, ASSESSMENT_STATUS, TESTIMONY_STATUS } from "@/lib/lifecycle";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
-
-/**
- * Authorized admin emails loaded from environment.
- * ADMIN_EMAILS should be a comma-separated list in .env.local
- * Falls back to founder email if unset.
- */
-function getAdminEmails(): string[] {
-  const envEmails = process.env.ADMIN_EMAILS;
-  if (envEmails) {
-    return envEmails.split(",").map((e) => e.trim()).filter(Boolean);
-  }
-  return ["founder@thewprotocol.online"];
-}
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,26 +13,15 @@ const supabaseAdmin = createAdminClient(
 
 /**
  * POST /api/admin/gate/review
- * 
- * HCC Tier 3 decision endpoint. Admin-only.
+ *
+ * HCC Tier 3 decision endpoint. Requires authenticated admin role.
  * Accepts { assessmentId, decision: "accept" | "reject" }
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin auth — either valid cookie hash OR authenticated admin email
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const cookieStore = await cookies();
-    const cookieValue = cookieStore.get("twp_admin_access")?.value;
-    const hasAdminToken = await verifyAdminCookie(cookieValue, process.env.ADMIN_PASSPHRASE);
-
-    const adminEmails = getAdminEmails();
-    if (!hasAdminToken && (!user || !adminEmails.includes(user.email || ""))) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
-
-    const reviewerId = user ? user.id : null;
-    const reviewerEmail = user ? user.email : "GOD_MODE_ADMIN";
+    // Verify authenticated admin identity — no passphrase fallback
+    const { user, error: authError } = await requireAdmin();
+    if (authError) return authError;
 
     const { assessmentId, decision } = await request.json();
 
@@ -55,12 +29,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    // Update assessment
+    // Update assessment with real reviewer identity
     const { error } = await supabaseAdmin
       .from("gate_assessments")
       .update({
         tier3_decision: decision,
-        tier3_reviewer_a: reviewerId,
+        tier3_reviewer_a: user.userId,
         tier3_completed_at: new Date().toISOString(),
         final_status: decision === "accept" ? "passed" : "failed",
       })
@@ -90,32 +64,36 @@ export async function POST(request: NextRequest) {
       await supabaseAdmin
         .from("witness_submissions")
         .update({
-          submission_status: decision === "accept" ? SUBMISSION_STATUS.ACCEPTED : SUBMISSION_STATUS.REJECTED_REVIEW,
+          submission_status:
+            decision === "accept"
+              ? SUBMISSION_STATUS.ACCEPTED
+              : SUBMISSION_STATUS.REJECTED_REVIEW,
         })
         .eq("id", assessmentData.submission_id);
 
-      // If accepted, update testimony record status and notify the user
+      // If accepted, update testimony record status and notify the witness
       if (decision === "accept") {
         await supabaseAdmin
           .from("testimony_records")
           .update({ status: TESTIMONY_STATUS.ANNOTATING })
           .eq("gate_assessment_id", assessmentId);
 
-        // Fetch user email and send notification
+        // Fetch witness email and send notification
         // @ts-ignore - Supabase JS typings for joined inner objects can be finicky
         const supabaseUserId = assessmentData.witness_submissions?.witness_profiles?.supabase_user_id;
-        
+
         if (supabaseUserId) {
           const { data: authData } = await supabaseAdmin.auth.admin.getUserById(supabaseUserId);
           const witnessEmail = authData?.user?.email;
 
           if (witnessEmail) {
-            await resend.emails.send({
-              from: "The Witness Protocol <inquiry@thewprotocol.online>",
-              to: witnessEmail,
-              subject: "The Gate Unlocked: Testimony Accepted",
-              text: `Your testimony has been accepted by the Human Curation Council.\n\nYou have fully bypassed the Gate. The Instrument is now unlocked.\n\nProceed to Phase 3: https://thewprotocol.online/instrument`,
-              html: `
+            await resend.emails
+              .send({
+                from: "The Witness Protocol <inquiry@thewprotocol.online>",
+                to: witnessEmail,
+                subject: "The Gate Unlocked: Testimony Accepted",
+                text: `Your testimony has been accepted by the Human Curation Council.\n\nYou have fully bypassed the Gate. The Instrument is now unlocked.\n\nProceed to Phase 3: https://thewprotocol.online/instrument`,
+                html: `
                 <div style="font-family: monospace; background: #000; color: #fff; padding: 40px;">
                   <h1 style="color: #fff; font-size: 24px;">THE GATE UNLOCKED</h1>
                   <p style="color: #888;">Your testimony has been reviewed and accepted by the Human Curation Council.</p>
@@ -123,20 +101,21 @@ export async function POST(request: NextRequest) {
                   <br/>
                   <a href="https://thewprotocol.online/instrument" style="background: #333; color: #fff; padding: 12px 24px; text-decoration: none; display: inline-block;">PROCEED TO PHASE 3</a>
                 </div>
-              `
-            }).catch(e => console.error("Resend error:", e));
+              `,
+              })
+              .catch((e) => console.error("Resend error:", e));
           }
         }
       }
     }
 
-    // Audit log
+    // Audit log — records real reviewer identity, not a placeholder
     await supabaseAdmin.from("audit_log").insert({
       action: `gate.tier3.${decision}`,
-      actor_id: reviewerId,
+      actor_id: user.userId,
       target_type: "gate_assessment",
       target_id: assessmentId,
-      metadata: { decision, reviewer_email: reviewerEmail },
+      metadata: { decision, reviewer_email: user.email, reviewer_role: user.role },
     });
 
     return NextResponse.json({ success: true });

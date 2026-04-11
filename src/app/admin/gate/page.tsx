@@ -1,39 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { createClient as createAdminClientDirect } from "@supabase/supabase-js";
 import { AdminGateQueue } from "@/components/admin/gate-queue";
-import { verifyAdminCookie } from "@/lib/utils/crypto";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Admin · Gate Queue",
   description: "HCC Gateway queue — review and score Gate submissions.",
 };
 
-function getAdminEmails(): string[] {
-  const envEmails = process.env.ADMIN_EMAILS;
-  if (envEmails) return envEmails.split(",").map((e) => e.trim()).filter(Boolean);
-  return ["founder@thewprotocol.online"];
-}
-
 export default async function AdminGatePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const cookieStore = await cookies();
-  const hasAdminToken = await verifyAdminCookie(
-    cookieStore.get("twp_admin_access")?.value,
-    process.env.ADMIN_PASSPHRASE
-  );
-
-  const adminEmails = getAdminEmails();
-  if (!hasAdminToken && (!user || !adminEmails.includes(user.email || ""))) {
-    redirect("/admin/login");
-  }
-
-  // Fetch assessments awaiting review (Tier 3)
-  const { createClient: createAdminClient } = await import("@supabase/supabase-js");
-  const supabaseAdmin = createAdminClient(
+  // Auth is enforced by admin layout — no duplicate check needed here.
+  const supabaseAdmin = createAdminClientDirect(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );

@@ -1,4 +1,5 @@
 import { openrouter, MODELS } from "./openrouter";
+import { regexStrip } from "./pii";
 
 /**
  * Gate Tier 1: AI Sieve
@@ -6,6 +7,10 @@ import { openrouter, MODELS } from "./openrouter";
  * Fast, cheap classification using Claude Haiku via OpenRouter.
  * Checks for: spam, gibberish, minimum quality threshold, language.
  * Returns a pass/fail verdict with reason.
+ * 
+ * PRIVACY: Essay text is regex-stripped of obvious PII before sending to
+ * the LLM. This satisfies the constitutional constraint that no raw PII
+ * is transmitted to third-party APIs.
  */
 
 export interface SieveResult {
@@ -35,6 +40,8 @@ FLAGS to check:
 - "too_short": Under 250 words of actual content (padding/filler doesn't count)
 - "low_effort": Extremely superficial, no genuine introspection
 
+Note: Some identifying details may have been redacted with placeholders like [REDACTED_NAME]. Evaluate the substance and quality of the text, not the presence of redaction markers.
+
 Respond ONLY with valid JSON:
 {
   "passed": boolean,
@@ -44,11 +51,14 @@ Respond ONLY with valid JSON:
 }`;
 
 export async function runSieve(essayText: string): Promise<SieveResult> {
+  // Constitutional privacy constraint: strip obvious PII before LLM call
+  const { text: strippedText } = regexStrip(essayText);
+
   const response = await openrouter.chat.completions.create({
     model: MODELS.SIEVE,
     messages: [
       { role: "system", content: SIEVE_PROMPT },
-      { role: "user", content: `SUBMITTED ESSAY:\n\n${essayText}` },
+      { role: "user", content: `SUBMITTED ESSAY:\n\n${strippedText}` },
     ],
     temperature: 0.1,
     max_tokens: 300,

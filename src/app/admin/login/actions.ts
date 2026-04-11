@@ -1,38 +1,33 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { hashAdminPassphrase } from "@/lib/utils/crypto";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
+/**
+ * Admin login via Supabase Auth.
+ * After sign-in, the admin_roles table is checked by the layout.
+ * The old ADMIN_PASSPHRASE cookie pattern has been removed.
+ */
 export async function loginAdmin(formData: FormData) {
-  const passphrase = formData.get("passphrase")?.toString();
+  const email = formData.get("email")?.toString();
+  const password = formData.get("password")?.toString();
 
-  if (!passphrase) {
-    return { success: false, error: "Passphrase is required." };
+  if (!email || !password) {
+    return { success: false, error: "Email and password are required." };
   }
 
-  const expectedPassphrase = process.env.ADMIN_PASSPHRASE;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  if (!expectedPassphrase || passphrase !== expectedPassphrase) {
-    return { success: false, error: "Invalid passphrase." };
+  if (error) {
+    return { success: false, error: "Invalid credentials." };
   }
-
-  // Hash the passphrase before storing in the cookie — never store raw secret
-  const hashedValue = await hashAdminPassphrase(expectedPassphrase);
-
-  const cookieStore = await cookies();
-  cookieStore.set({
-    name: "twp_admin_access",
-    value: hashedValue,
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60 * 24,
-    sameSite: "lax",
-  });
 
   return { success: true };
 }
 
 export async function logoutAdmin() {
-  const cookieStore = await cookies();
-  cookieStore.delete("twp_admin_access");
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/admin/login");
 }

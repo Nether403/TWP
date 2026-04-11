@@ -69,7 +69,13 @@ const PII_PATTERNS: { type: string; regex: RegExp; replacement: string }[] = [
   },
 ];
 
-function regexStrip(text: string): { text: string; detections: PIIDetection[] } {
+/**
+ * Fast local PII strip using regex patterns only.
+ * Exported for pre-LLM redaction in sieve.ts and qualifier.ts.
+ * The full candidate-isolation pipeline (detectAndStripPII) is used
+ * after Gate passage to produce the de-identified testimony record.
+ */
+export function regexStrip(text: string): { text: string; detections: PIIDetection[] } {
   const detections: PIIDetection[] = [];
   let result = text;
 

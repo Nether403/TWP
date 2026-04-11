@@ -1,9 +1,6 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import { CorpusClient } from "@/components/admin/corpus-client";
-import { verifyAdminCookie } from "@/lib/utils/crypto";
 
 export const metadata: Metadata = {
   title: "Admin · Corpus",
@@ -16,15 +13,7 @@ const supabaseAdmin = createClient(
 );
 
 export default async function CorpusPage() {
-  const cookieStore = await cookies();
-  const hasAdminToken = await verifyAdminCookie(
-    cookieStore.get("twp_admin_access")?.value,
-    process.env.ADMIN_PASSPHRASE
-  );
-
-  if (!hasAdminToken) {
-    redirect("/admin/login");
-  }
+  // Auth is enforced by admin layout — no duplicate check needed here.
 
   // Fetch accepted testimonies with their assessments
   const { data: testimonies, error } = await supabaseAdmin

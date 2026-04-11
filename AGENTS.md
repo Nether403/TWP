@@ -67,8 +67,18 @@ The Foundation's aesthetic is **stark minimalism signaling gravity**:
 - Audit entries include: action, actor_id, target_type, target_id, metadata, timestamp
 - Audit log is append-only — no updates, no deletes, ever
 
-### 5. Stage Clarity — ALWAYS HONEST
-- Every public-facing page must state "Pre-alpha" status
+### 5. Admin & Backoffice Constraints
+1.  **Strictly Authenticated Admin:**
+    The Admin Console MUST NOT use shared passphrases, cookies, or "GOD_MODE" fallbacks. All access requires an authenticated Supabase user session checked against the `admin_roles` table using the central `requireAdmin()` helper.
+    -   Allowed roles: `admin`, `hcc`, `sac`, `board`.
+    -   API route mutation endpoints MUST verify identity and extract the `userId` + `role` to inject into audit logs.
+2.  **Audit Logs are Immutable & Specific:**
+    Every administrative action (`accept`, `reject`, `annotate`) MUST be logged to the `audit_log` table with the *specific executing user ID* (not a generic system marker) and full metadata payload.
+3.  **No Arbitrary SQL mutations:**
+    Admin views operate on specific Server Actions with schema-validated input. Raw table editing via UI is strictly prohibited to maintain data integrity.
+
+### 6. Stage Clarity — ALWAYS HONEST
+- Every public-facing page must state "Phase 5 Alpha" status
 - Never imply the system is complete, deployed, or proven
 - The Failure Log is public — bugs and flaws are published, not hidden
 

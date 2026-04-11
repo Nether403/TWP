@@ -7,30 +7,31 @@ import { loginAdmin } from "./actions";
 import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
-  const [passphrase, setPassphrase] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passphrase) return;
+    if (!email || !password) return;
     setIsLoading(true);
     setError(null);
 
     const formData = new FormData();
-    formData.append("passphrase", passphrase);
+    formData.append("email", email);
+    formData.append("password", password);
 
     const result = await loginAdmin(formData);
 
     if (result.success) {
-      // Authenticated — go straight to admin queue
       router.push("/admin/gate");
       router.refresh();
     } else {
-      setError(result.error || "Unknown error occurred.");
+      setError(result.error || "Authentication failed.");
       setIsLoading(false);
-      setPassphrase("");
+      setPassword("");
     }
   };
 
@@ -48,21 +49,37 @@ export default function AdminLoginPage() {
         <div className="space-y-4">
           <Shield className="w-8 h-8 mx-auto text-red-500/50" />
           <h1 className="text-2xl font-serif tracking-widest text-foreground text-glow uppercase">
-            Admin mode
+            Administration
           </h1>
           <p className="text-xs tracking-[0.2em] text-muted-foreground/40 font-mono uppercase">
-            Restricted Authenticator
+            Restricted Access
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="relative group">
+            <input
+              type="email"
+              id="admin-email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              autoComplete="email"
+              className="w-full bg-transparent border-b border-border/50 text-center py-3 px-6 text-foreground font-sans text-base focus:outline-none focus:border-red-500/50 transition-colors duration-500 placeholder:text-muted-foreground/20"
+              required
+            />
+            <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-red-500/70 transition-all duration-700 ease-out group-focus-within:w-full" />
+          </div>
+
           <div className="relative group">
             <input
               type="password"
-              value={passphrase}
-              onChange={(e) => setPassphrase(e.target.value)}
-              placeholder="Passphrase"
-              className="w-full bg-transparent border-b border-border/50 text-center py-4 px-6 text-foreground font-sans text-xl focus:outline-none focus:border-red-500/50 transition-colors duration-500 placeholder:text-muted-foreground/20"
+              id="admin-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              autoComplete="current-password"
+              className="w-full bg-transparent border-b border-border/50 text-center py-3 px-6 text-foreground font-sans text-base focus:outline-none focus:border-red-500/50 transition-colors duration-500 placeholder:text-muted-foreground/20"
               required
             />
             <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-red-500/70 transition-all duration-700 ease-out group-focus-within:w-full" />
@@ -84,7 +101,7 @@ export default function AdminLoginPage() {
             className="group/btn relative w-full flex items-center justify-center space-x-3 py-4 overflow-hidden border border-border/30 hover:border-red-500/40 transition-colors duration-500"
           >
             <span className="font-serif tracking-[0.2em] uppercase text-xs opacity-70 group-hover/btn:opacity-100">
-              {isLoading ? "Verifying..." : "unlock the gate"}
+              {isLoading ? "Authenticating..." : "Enter"}
             </span>
             <span className="absolute inset-0 bg-red-500/5 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
           </button>

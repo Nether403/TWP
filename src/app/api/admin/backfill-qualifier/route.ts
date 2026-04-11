@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { runQualifier } from "@/lib/ai/qualifier";
-import { verifyAdminCookie } from "@/lib/utils/crypto";
+import { requireAdmin } from "@/lib/auth/admin";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,23 +10,16 @@ const supabaseAdmin = createClient(
 
 /**
  * POST /api/admin/backfill-qualifier
- * 
+ *
  * Re-runs the Qualifier on accepted submissions that have empty tags
- * (crash-affected). Admin-only, passphrase-protected.
- * 
+ * (crash-affected). Requires authenticated admin role.
+ *
  * Optional body: { assessmentId: string } to target a single assessment.
  */
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const hasAdminToken = await verifyAdminCookie(
-      cookieStore.get("twp_admin_access")?.value,
-      process.env.ADMIN_PASSPHRASE
-    );
-
-    if (!hasAdminToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-    }
+    const { error: authError } = await requireAdmin();
+    if (authError) return authError;
 
     const body = await request.json().catch(() => ({}));
     const targetId = body.assessmentId;

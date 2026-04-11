@@ -1,9 +1,6 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import { AdminDashboardClient } from "@/components/admin/dashboard-client";
-import { verifyAdminCookie } from "@/lib/utils/crypto";
 import { SUBMISSION_STATUS, ASSESSMENT_STATUS } from "@/lib/lifecycle";
 
 export const metadata: Metadata = {
@@ -17,15 +14,7 @@ const supabaseAdmin = createClient(
 );
 
 export default async function AdminDashboardPage() {
-  const cookieStore = await cookies();
-  const hasAdminToken = await verifyAdminCookie(
-    cookieStore.get("twp_admin_access")?.value,
-    process.env.ADMIN_PASSPHRASE
-  );
-
-  if (!hasAdminToken) {
-    redirect("/admin/login");
-  }
+  // Auth is enforced by admin layout — no duplicate check needed here.
 
   // Gather statistics
   const [

@@ -14,12 +14,12 @@ const statusSections = [
       { name: "Global Production Deployment", detail: "Live on Vercel with custom domain and edge-caching" },
       { name: "The Gate (3-Tier Vetting)", detail: "Tier 1: AI Sieve → Tier 2: AI Qualitative → Tier 3: Human Review via Admin Console" },
       { name: "Inquisitor Dialogue Engine", detail: "Phase 3 structured testimony extraction, powered by Claude Sonnet 4" },
-      { name: "God Mode Admin Portal", detail: "Standalone passphrase-protected administrative backend" },
+      { name: "Admin Dashboard", detail: "Identity-authenticated role-based administrative backend; accessed via Supabase Auth" },
       { name: "Corpus Manager & Dashboard", detail: "Manual tagging interface (CAP/REL/FELT), pipeline statistics, and QA metrics" },
       { name: "Contributor Dashboard", detail: "Personal tracker for Gate progress and submission history" },
       { name: "Transaction Email Integration", detail: "Resend-powered magic links and automated acceptance notifications" },
       { name: "Sentry Error Monitoring", detail: "Live error capture and session tracking across browser, server, and edge runtimes" },
-      { name: "PII De-identification", detail: "Strict regex-based anonymization pipeline securing all database layers" }
+      { name: "PII De-identification", detail: "Two-pass pipeline: regex pre-strip before all LLM calls + candidate-isolation NER for testimony records" }
     ],
   },
   {
@@ -28,7 +28,8 @@ const statusSections = [
     items: [
       { name: "Completed Testimony Corpus", detail: "Accumulating real human testimony to train the subsequent layers" },
       { name: "Constitutional Mirror", detail: "Cross-reference engine for analyzing structural taxonomy anomalies" },
-      { name: "Icarus Synthesis Engine", detail: "Distilled thought generation derived from cross-witness alignments" }
+      { name: "Icarus Synthesis Engine", detail: "Distilled thought generation derived from cross-witness alignments" },
+      { name: "GDPR Privacy Notice & Consent Management", detail: "EDPB-aligned privacy notice, granular consent management, DSAR handling" }
     ],
   },
   {
@@ -39,7 +40,7 @@ const statusSections = [
       { name: "RFC-3161 Provenance Chain", detail: "Cryptographic timestamping not yet integrated" },
       { name: "IPFS Archival Layer", detail: "Content-addressed storage not yet implemented" },
       { name: "Board / SAC / HCC Portals", detail: "Structured external governance dashboards not implemented" },
-      { name: "GDPR Compliance Tooling", detail: "DSAR handling, consent audit, and data export/purge not built" },
+      { name: "Inter-Rater Reliability Scoring", detail: "Cohen's kappa computation for Tier-3 reviewers not yet operational" },
     ],
   },
 ];

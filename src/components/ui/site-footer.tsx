@@ -5,6 +5,7 @@ const footerLinks = [
   { label: "About", href: "/about" },
   { label: "Reviewer Packet", href: "/packet" },
   { label: "Governance", href: "/governance" },
+  { label: "Privacy", href: "/privacy" },
   { label: "Failure Log", href: "/failure-log" },
   { label: "Status", href: "/status" },
 ];
@@ -78,7 +79,7 @@ export function SiteFooter() {
         {/* Bottom bar */}
         <div className="mt-12 pt-6 border-t border-border/10 flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
           <p className="text-[10px] text-muted-foreground/30 tracking-widest uppercase">
-            Pre-alpha Research Initiative · Not a product
+            Alpha Research Initiative · Not a product
           </p>
           <p className="text-[10px] text-muted-foreground/30 tracking-widest">
             © {new Date().getFullYear()} Stichting The Witness Protocol Foundation

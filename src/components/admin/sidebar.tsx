@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, BarChart3, BookOpen, LogOut, Inbox, ChevronRight } from "lucide-react";
 import { logoutAdmin } from "@/app/admin/login/actions";
-import { useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -13,15 +12,20 @@ const NAV_ITEMS = [
   { href: "/admin/corpus", label: "Corpus", icon: BookOpen },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  role: string;
+  email: string;
+}
+
+export function AdminSidebar({ role, email }: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const handleLogout = async () => {
     await logoutAdmin();
-    router.push("/admin/login");
-    router.refresh();
   };
+
+  const roleLabel = role.toUpperCase();
+  const emailShort = email.split("@")[0];
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-56 border-r border-border/10 bg-black/30 backdrop-blur-sm flex flex-col z-50">
@@ -30,11 +34,11 @@ export function AdminSidebar() {
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-red-500/60" />
           <span className="font-serif text-xs tracking-[0.2em] text-foreground/70 uppercase">
-            God Mode
+            Administration
           </span>
         </div>
         <p className="text-[9px] font-mono text-muted-foreground/30 tracking-wide">
-          HCC ADMINISTRATIVE CONSOLE
+          {roleLabel} · {emailShort}
         </p>
       </div>
 
@@ -71,13 +75,15 @@ export function AdminSidebar() {
         >
           ← Public Site
         </Link>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 text-[10px] text-red-500/40 hover:text-red-400/60 transition-colors font-mono tracking-wide w-full"
-        >
-          <LogOut className="w-3 h-3" />
-          Terminate Session
-        </button>
+        <form action={handleLogout}>
+          <button
+            type="submit"
+            className="flex items-center gap-2 text-[10px] text-red-500/40 hover:text-red-400/60 transition-colors font-mono tracking-wide w-full"
+          >
+            <LogOut className="w-3 h-3" />
+            Sign Out
+          </button>
+        </form>
       </div>
     </aside>
   );

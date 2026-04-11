@@ -1,4 +1,5 @@
 import { openrouter, MODELS } from "./openrouter";
+import { regexStrip } from "./pii";
 import {
   type ConversationState,
   type DistressLevel,
@@ -103,6 +104,9 @@ export function buildMessages(
     } else if (turn.role === "inquisitor") {
       messages.push({ role: "assistant", content: turn.content });
     } else if (turn.role === "synthesis") {
+      // Synthesis rows may exist in legacy sessions. In current architecture,
+      // synthesis is stored in synthesis_entries and injected separately.
+      // Include here for backward-compatibility with older session data.
       messages.push({
         role: "system",
         content: `[SYNTHESIS — Distilled Thought at turn ${state.turnCount}]\n${turn.content}`,
@@ -205,9 +209,12 @@ Respond ONLY with valid JSON:
 export async function generateSynthesis(
   recentTurns: Turn[]
 ): Promise<{ distilled_thought: string; themes: string[] }> {
-  const transcript = recentTurns
+  const rawTranscript = recentTurns
     .map((t) => `[${t.role.toUpperCase()}]: ${t.content}`)
     .join("\n\n");
+
+  // Constitutional privacy constraint: strip PII before sending to LLM
+  const { text: transcript } = regexStrip(rawTranscript);
 
   const response = await openrouter.chat.completions.create({
     model: MODELS.QUALIFIER, // Sonnet for synthesis quality

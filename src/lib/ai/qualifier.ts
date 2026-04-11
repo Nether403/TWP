@@ -1,4 +1,5 @@
 import { openrouter, MODELS } from "./openrouter";
+import { regexStrip } from "./pii";
 
 /**
  * Gate Tier 2: AI Qualitative Analysis
@@ -9,6 +10,10 @@ import { openrouter, MODELS } from "./openrouter";
  * NOTE: The Protocol seeks *human moral wisdom* broadly — not just explicit
  * AI safety discourse. A testimony about parenting, grief, betrayal, or 
  * cultural conflict is alignment-relevant if it reveals genuine moral reasoning.
+ * 
+ * PRIVACY: Essay text is regex-stripped of obvious PII before sending to
+ * the LLM. This satisfies the constitutional constraint that no raw PII
+ * is transmitted to third-party APIs.
  */
 
 export interface QualifierResult {
@@ -56,6 +61,8 @@ PASS THRESHOLD: At least 2 tags extracted across all categories AND average scor
 
 A testimony should PASS if it reveals genuine moral reasoning, ethical reflection, or lived wisdom — even if it never mentions AI. The Protocol is building a HUMAN moral corpus. Err on the side of inclusion; the Human Curation Council (Tier 3) will apply the rigorous filter.
 
+Note: Some identifying details may have been redacted with placeholders like [REDACTED_NAME] or [REDACTED_LOCATION]. Evaluate the moral and philosophical substance, not the presence of redaction markers.
+
 Respond ONLY with valid JSON:
 {
   "passed": boolean,
@@ -69,11 +76,14 @@ Respond ONLY with valid JSON:
 }`;
 
 export async function runQualifier(essayText: string): Promise<QualifierResult> {
+  // Constitutional privacy constraint: strip obvious PII before LLM call
+  const { text: strippedText } = regexStrip(essayText);
+
   const response = await openrouter.chat.completions.create({
     model: MODELS.QUALIFIER,
     messages: [
       { role: "system", content: QUALIFIER_PROMPT },
-      { role: "user", content: `TESTIMONY TEXT:\n\n${essayText}` },
+      { role: "user", content: `TESTIMONY TEXT:\n\n${strippedText}` },
     ],
     temperature: 0.3,
     max_tokens: 800,

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { streamInquisitorResponse, generateSynthesis } from "@/lib/ai/inquisitor";
+import { regexStrip } from "@/lib/ai/pii";
 import {
   type ConversationState,
   updateState,
@@ -252,11 +254,14 @@ export async function POST(request: NextRequest) {
     const gateTestimony = testimony?.de_identified_text || "";
 
     // 5. Stream Inquisitor response
+    // Constitutional privacy constraint: strip PII from live witness message
+    // before sending to the LLM. Gate testimony is already de-identified.
+    const { text: strippedMessage } = regexStrip(message);
     const responseStream = await streamInquisitorResponse(
       gateTestimony,
       history,
       stateAfterWitness,
-      message
+      strippedMessage
     );
 
     // We need to tee the stream: one for the client, one to capture the full response
@@ -315,20 +320,15 @@ export async function POST(request: NextRequest) {
           const recentTurns = history.slice(-SYNTHESIS_WINDOW);
           const synthesis = await generateSynthesis(recentTurns);
 
+          // Synthesis is stored in synthesis_entries (the dedicated table).
+          // Do NOT also insert into inquisitor_turns — turn_number is INTEGER
+          // and +0.5 causes silent truncation/collision. The session endpoint
+          // loads syntheses separately from synthesis_entries.
           await supabaseAdmin.from("synthesis_entries").insert({
             session_id: session.id,
             trigger_turn: inquisitorTurnNumber,
             distilled_thought: synthesis.distilled_thought,
             themes: synthesis.themes,
-          });
-
-          // Also record as a special turn
-          await supabaseAdmin.from("inquisitor_turns").insert({
-            session_id: session.id,
-            turn_number: inquisitorTurnNumber + 0.5, // Interstitial
-            role: "synthesis",
-            content: synthesis.distilled_thought,
-            metadata: { themes: synthesis.themes },
           });
         }
 
@@ -358,8 +358,9 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    // Fire and forget background processing
-    processCapture();
+    // Durable background processing — Vercel keeps the function alive
+    // until processCapture completes (after() is Next.js 16+ API).
+    after(processCapture);
 
     // Return streaming response to client
     return new Response(clientStream, {

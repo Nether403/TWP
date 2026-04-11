@@ -293,9 +293,15 @@ export default async function DashboardPage() {
           </a>
           <a
             href="/instrument"
-            className="inline-flex items-center space-x-2 text-xs text-muted-foreground/50 hover:text-foreground transition-colors duration-300 font-serif tracking-widest uppercase"
+            className="inline-flex items-center space-x-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-300 font-serif tracking-widest uppercase border-b border-transparent hover:border-foreground/20 pb-px"
           >
             <span>Enter The Instrument</span>
+          </a>
+          <a
+            href="/dashboard/consent"
+            className="inline-flex items-center space-x-2 text-xs text-muted-foreground/50 hover:text-foreground transition-colors duration-300 font-serif tracking-widest uppercase"
+          >
+            <span>Manage Consent Preferences</span>
           </a>
         </div>
       </div>
