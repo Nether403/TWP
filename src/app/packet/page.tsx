@@ -81,10 +81,10 @@ export default function ReviewerPacket() {
             </div>
             <div className="border-t border-border/20 pt-6 space-y-3 text-sm font-sans text-muted-foreground">
               <p className="font-serif text-xs tracking-widest uppercase text-foreground/60 mb-3">Reviewer Annotations</p>
-              <p><span className="text-foreground/70 font-mono text-xs">DEPTH:</span> The witness identifies systemic complicity, not just individual guilt. The unresolved tension (&ldquo;I still carry&rdquo;) signals ongoing moral processing — not a tidy redemption arc.</p>
-              <p><span className="text-foreground/70 font-mono text-xs">SPECIFICITY:</span> Concrete details (Rotterdam, logistics, timestamps, quarterly targets) ground the narrative. The dilemma is situated, not abstract.</p>
-              <p><span className="text-foreground/70 font-mono text-xs">ETHICS:</span> The witness reasons about accountability at the system level, not just the individual level. They distinguish between policy compliance and moral responsibility.</p>
-              <p><span className="text-foreground/70 font-mono text-xs">ORIGINALITY:</span> Workplace ethics submissions are common. What elevates this is the focus on the designer of the incentive structure, not the violator — an uncommon moral lens.</p>
+              <p><span className="text-foreground/70 font-mono text-xs">COHERENCE:</span> The narrative is structured logically, tracing the cause and effect between the incentive design, the breaking of rules, and the final consequence.</p>
+              <p><span className="text-foreground/70 font-mono text-xs">RELEVANCE:</span> The witness directly addresses the prompt, focusing specifically on how they sacrificed their professional standing to uphold accountability for their own system.</p>
+              <p><span className="text-foreground/70 font-mono text-xs">SUBSTANCE:</span> Concrete details (Rotterdam, logistics, timestamps, quarterly targets) ground the narrative. The dilemma is situated, not purely abstract.</p>
+              <p><span className="text-foreground/70 font-mono text-xs">SINCERITY:</span> The unresolved tension (&ldquo;I still carry&rdquo;) and lack of a tidy redemption arc signal genuine moral processing over AI-generated boilerplate.</p>
             </div>
           </div>
         </motion.section>

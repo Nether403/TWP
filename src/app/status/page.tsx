@@ -59,9 +59,9 @@ export default function StatusPage() {
             built, is building, and has not yet started. Updated with each
             development phase.
           </p>
-          <p className="inline-block px-4 py-1 border border-border/40 text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-serif">
-            Live · Phase 5 Setup
-          </p>
+          <div className="inline-block px-4 py-1 border border-border/40 text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-serif">
+            Live · Phase 5 Alpha
+          </div>
         </div>
 
         {/* Status Sections */}

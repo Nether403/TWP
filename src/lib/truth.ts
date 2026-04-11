@@ -26,7 +26,8 @@ export const TWP_TRUTH = {
     "acceptance of the MHS is required before proceeding to The Gate",
     "Instrument is not yet connected",
     "3.6", // Stale rubric threshold
-    "six dimensions using a 1-5 scale" // Stale rubric
+    "six dimensions using a 1-5 scale", // Stale rubric
+    "Phase 5 Setup" // Setup vs Alpha drift
   ],
   
   // Operational markers expected in documents
