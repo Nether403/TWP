@@ -15,6 +15,7 @@
  *   4. 20260410153030_phase3_inquisitor_schema
  *   5. 20260410211344_add_annotations_to_testimony_records
  *   6. 20260421173000_m1_witness_runtime_links
+ *   7. 20260624120000_m2_disclosure_ledger
  * 
  * Last reconciled: 2026-04-11 (session: 0ce279d6)
  */
@@ -252,4 +253,24 @@ export const witnessRuntimeLinks = pgTable('witness_runtime_links', {
   lastBridgeSyncedAt: timestamp('last_bridge_synced_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+/**
+ * Append-only disclosure ledger (M2). One row per public/partner exposure of a
+ * Corpus_Entry so a revocation cascade can reach every shared copy. Only
+ * `revocation_status` / `revoked_at` are ever mutated; rows are never deleted.
+ */
+export const disclosureLedger = pgTable('disclosure_ledger', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  entryId: text('entry_id').notNull(),
+  publicationBundleId: text('publication_bundle_id').notNull(),
+  redactedPublicSliceHash: text('redacted_public_slice_hash').notNull(),
+  publicationBundleHash: text('publication_bundle_hash'),
+  recipientOrChannel: text('recipient_or_channel').notNull(),
+  disclosedAt: timestamp('disclosed_at', { withTimezone: true }).defaultNow().notNull(),
+  consentVersionRef: text('consent_version_ref').notNull(),
+  termsRef: text('terms_ref'),
+  revocationStatus: text('revocation_status').default('active').notNull(), // CHECK: active, revoked, pending
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });

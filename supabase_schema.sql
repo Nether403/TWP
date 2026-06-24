@@ -218,6 +218,25 @@ CREATE TABLE public.witness_runtime_links (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 15. disclosure_ledger: Append-only record of public/partner exposures (M2)
+CREATE TABLE public.disclosure_ledger (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  entry_id TEXT NOT NULL,
+  publication_bundle_id TEXT NOT NULL,
+  redacted_public_slice_hash TEXT NOT NULL,
+  publication_bundle_hash TEXT,
+  recipient_or_channel TEXT NOT NULL,
+  disclosed_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  consent_version_ref TEXT NOT NULL,
+  terms_ref TEXT,
+  revocation_status TEXT DEFAULT 'active' NOT NULL
+    CHECK (revocation_status IN ('active', 'revoked', 'pending')),
+  revoked_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX disclosure_ledger_entry_id_idx ON public.disclosure_ledger (entry_id);
+
 -- ────────────────────────────────────────────────────────
 -- SECURITY (RLS POLICIES)
 -- ────────────────────────────────────────────────────────
@@ -237,6 +256,7 @@ ALTER TABLE public.expert_targets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.consent_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.witness_runtime_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.disclosure_ledger ENABLE ROW LEVEL SECURITY;
 
 -- Anonymous Intake Policies
 CREATE POLICY "summons_insert_anon" ON public.summons FOR INSERT TO anon WITH CHECK (true);
