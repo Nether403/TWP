@@ -37,6 +37,13 @@
 
 ## Exact Verified Gap
 
+> **RESOLVED (2026-06).** This gap is closed. `G_5.2/apps/dashboard/src/server.ts` now
+> enforces bridge auth via `requireWitnessBridgeAuth` (constant-time shared-secret check,
+> caller header check, stable `401`/`403`/`503` JSON with codes
+> `witness_bridge_auth_missing` / `_invalid` / `_unconfigured`) on the bridge-exposed Witness
+> endpoints. TWP's `classifyWitnessBridgeFailure` already maps those codes. The text below is
+> retained as the historical M1 contract.
+
 - `G_5.2/apps/dashboard/src/server.ts` currently exposes the Witness HTTP surface without bridge-auth enforcement.
 - `TWP` can send the shared-secret headers now, but `G_5.2` does not currently validate them.
 - Smallest required `G_5.2` patch:

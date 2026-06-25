@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [Unreleased] — Witness bridge, lifecycle, disclosure ledger, corpus-entry control plane
+
+### Added
+- **M1 Witness bridge**: authenticated bridge client to the G_5.2 governed runtime (`src/lib/witness-bridge/`), shared-secret headers, fail-closed config. Bridge auth is enforced on the G_5.2 side (see `docs/m1-witness-bridge-contract.md`).
+- **M2 accepted-witness lifecycle**: `witness_runtime_links` linkage state, lifecycle/revoke/bridge-error classification (`lifecycle.ts`, `link-state.ts`), proven in `docs/m2-witness-revoke-proof.md`.
+- **Disclosure ledger** (`disclosure_ledger` table + `src/lib/witness-bridge/disclosure-ledger.ts`): append-only record of every public/partner exposure; the authoritative registry for revocation.
+- **Outreach-readiness HCC gate** (`outreach-readiness.ts`): R1–R10 checklist + structural gates (public-slice hash present, `entry_kind === real`).
+- **Revocation coordinator** (`revocation.ts`): flips ledger exposures to revoked (never deletes), blocks re-export, signals the runtime.
+
+### Changed
+- **Tables (14)**: added `gate_assessments`, `testimony_records`, `inquisitor_*`, `synthesis_entries`, `admin_roles`, `consent_records`, `witness_runtime_links`, `disclosure_ledger` beyond the Phase 0 set.
+- **Migrations (7)**: … → `phase3_inquisitor_schema` → `add_annotations_to_testimony_records` → `m1_witness_runtime_links` → `m2_disclosure_ledger`.
+
+### Note
+- The corpus-entry schema/compiler/export themselves live in the G_5.2 repo (`packages/witness-types`, `packages/orchestration`); see that repo's `docs/system-map.md` and `.kiro/specs/outreach-ready-corpus-entry/`.
+
+---
+
 ## [0.5.0] — Phase 5 Alpha (Live)
 
 ### Added

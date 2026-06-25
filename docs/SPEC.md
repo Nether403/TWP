@@ -3,6 +3,12 @@
 > **Version:** 1.0 | **Date:** 2026-04-10  
 > **Status:** Pre-alpha
 
+> **⚠ Status note (2026-06):** This is the original design-time spec. Parts are aspirational or
+> superseded — notably the "Pre-alpha" status (the platform is Phase 5 Alpha; see `CHANGELOG.md`),
+> the CI/CD section (no GitHub Actions workflow is committed), and Constitutional Mirror / corpus
+> API (not built). For current truth, trust the live code + `src/lib/db/schema.ts` + the bridge
+> docs over this document where they disagree.
+
 ---
 
 ## 1. Architecture Overview
@@ -100,9 +106,7 @@ erDiagram
 
 ### 2.2 Table Specifications
 
-See [Implementation Plan](file:///C:/Users/van_d/.gemini/antigravity/brain/0ce279d6-9c2f-4b95-ba83-2903c9283e1f/implementation_plan.md) for full SQL schema per phase.
-
-### 2.3 Row-Level Security Policy
+See `src/lib/db/schema.ts` and `src/lib/db/migrations/` (the live DB + checked migrations are the source of truth) for the full schema.### 2.3 Row-Level Security Policy
 
 | Table | Select | Insert | Update | Delete |
 |---|---|---|---|---|
