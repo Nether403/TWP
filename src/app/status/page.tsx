@@ -60,7 +60,7 @@ export default function StatusPage() {
             development phase.
           </p>
           <div className="inline-block px-4 py-1 border border-border/40 text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-serif">
-            Live · Phase 5 Alpha
+            Live · Phase 5 · Beta (v0.9)
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export default function StatusPage() {
         {/* Footer note */}
         <div className="text-center border-t border-border/10 pt-10">
           <p className="text-[10px] text-muted-foreground/30 tracking-widest uppercase font-sans">
-            Last updated: April 2026 · This page will evolve with each development phase
+            Last updated: June 2026 · This page will evolve with each development phase
           </p>
         </div>
       </div>

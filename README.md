@@ -6,7 +6,7 @@ The core infrastructure for gathering, analyzing, and safeguarding human moral a
 
 **Live Site:** [https://thewprotocol.online](https://thewprotocol.online)
 
-## Current Status: Operational Alpha (Live)
+## Current Status: Operational Beta — v0.9 (Live)
 
 The platform is currently **live** and actively used for testimony input and annotation.
 

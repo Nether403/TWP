@@ -219,7 +219,7 @@ export default function Home() {
           </div>
           <p className="text-sm text-muted-foreground/60 max-w-lg mx-auto font-sans leading-relaxed">
             The Witness Protocol Foundation is a Dutch non-profit (stichting) research
-            initiative. It is in Phase 5 Alpha — the core instruments are built and live, and the corpus is actively capturing testimony. We publish our failures.
+            initiative. It is in late beta (v0.9), approaching v1 — the core instruments are built and live, and the corpus is capturing testimony. We publish our failures.
           </p>
         </motion.div>
       </section>
@@ -280,15 +280,15 @@ export default function Home() {
               Current Status
             </h2>
             <p className="inline-block px-4 py-1 border border-border/40 text-[10px] tracking-[0.3em] uppercase text-muted-foreground font-serif">
-              Phase 5 Alpha
+              Phase 5 · Beta (v0.9)
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { label: "Exists", items: ["Landing page", "Gate UI (intake form)", "Reviewer Packet", "Failure Log", "Governance charter"] },
-              { label: "Being Built", items: ["AI Gate vetting (3-tier)", "Inquisitor dialogue engine", "PII de-identification", "Annotation framework"] },
-              { label: "Does Not Exist Yet", items: ["Completed testimony corpus", "Published research outputs", "RFC-3161 provenance chain", "IPFS archival layer"] },
+              { label: "Exists", items: ["3-tier Gate vetting", "Inquisitor dialogue engine", "PII de-identification", "Admin & contributor dashboards", "CAP/REL/FELT annotation", "Reviewer Packet", "Failure Log", "Governance charter"] },
+              { label: "Being Built", items: ["First consented testimony corpus", "Constitutional Mirror (cross-reference engine)", "Icarus synthesis engine", "GDPR consent management"] },
+              { label: "Does Not Exist Yet", items: ["Published research outputs", "RFC-3161 provenance chain", "IPFS archival layer"] },
             ].map((column, i) => (
               <motion.div
                 key={column.label}
