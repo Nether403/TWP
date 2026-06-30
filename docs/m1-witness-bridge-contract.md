@@ -35,7 +35,7 @@
 - `POST /api/witness/consent`
 - `GET /api/witness/testimony?witnessId=...`
 
-## Exact Verified Gap
+## Exact Verified Gap (RESOLVED — original M1 text retained below)
 
 > **RESOLVED (2026-06).** This gap is closed. `G_5.2/apps/dashboard/src/server.ts` now
 > enforces bridge auth via `requireWitnessBridgeAuth` (constant-time shared-secret check,
@@ -44,9 +44,11 @@
 > endpoints. TWP's `classifyWitnessBridgeFailure` already maps those codes. The text below is
 > retained as the historical M1 contract.
 
-- `G_5.2/apps/dashboard/src/server.ts` currently exposes the Witness HTTP surface without bridge-auth enforcement.
-- `TWP` can send the shared-secret headers now, but `G_5.2` does not currently validate them.
-- Smallest required `G_5.2` patch:
+Original M1 finding (now addressed):
+
+- ~~`G_5.2/apps/dashboard/src/server.ts` exposes the Witness HTTP surface without bridge-auth enforcement.~~ (done: guard added)
+- ~~`TWP` can send the shared-secret headers, but `G_5.2` does not validate them.~~ (done: validated)
+- Smallest required `G_5.2` patch **(completed)**:
   - add one request guard in `apps/dashboard/src/server.ts`
   - enforce the shared secret only for bridge-exposed Witness endpoints
   - return `401` or `403` with stable JSON when missing or invalid
