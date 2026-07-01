@@ -16,7 +16,7 @@
     "@vercel/analytics": "^2.0.1",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.38.0",
-    "lucide-react": "^1.7.0",
+    "lucide-react": "^1.14.0",
     "next": "^16.2.4",
     "openai": "^6.34.0",
     "react": "^19.2.5",
