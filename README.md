@@ -4,7 +4,7 @@
 
 The core infrastructure for gathering, analyzing, and safeguarding human moral and relational testimony in the face of transformative AI. 
 
-**Live Site:** [https://thewprotocol.online](https://thewprotocol.online)
+**Live Site:** [https://thewprotocol.online](https://twpf.online)
 
 ## Current Status: Operational Beta — v0.9 (Live)
 
